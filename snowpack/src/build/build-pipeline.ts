@@ -88,6 +88,7 @@ async function runPipelineLoadStep(
     } catch (err) {
       // note: for many plugins like Babel, `err.toString()` is needed to display full output
       logger.error(err.toString() || err, {name: step.name});
+      // TODO: This needs to be surfaced so that we can send to HMR!
       if (isExitOnBuild) {
         process.exit(1);
       }

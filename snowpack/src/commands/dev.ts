@@ -745,7 +745,8 @@ If Snowpack is having trouble detecting the import, add ${colors.bold(
     try {
       responseOutput = await buildFile(fileLoc);
     } catch (err) {
-      logger.error(`${reqPath}
+      hmrEngine.broadcastMessage({type: 'error', url});
+      logger.error(`Boo ${reqPath}
 ${err}`);
       sendError(req, res, 500);
       return;

@@ -20,7 +20,9 @@ function sendSocketMessage(msg) {
     _sendSocketMessage(msg);
   }
 }
-const socketURL = typeof window !== 'undefined' &&  window.HMR_WEBSOCKET_URL || (location.protocol === 'http:' ? 'ws://' : 'wss://') + location.host + '/';
+const socketURL =
+  (typeof window !== 'undefined' && window.HMR_WEBSOCKET_URL) ||
+  (location.protocol === 'http:' ? 'ws://' : 'wss://') + location.host + '/';
 
 const socket = new WebSocket(socketURL, 'esm-hmr');
 socket.addEventListener('open', () => {
@@ -139,20 +141,34 @@ socket.addEventListener('message', ({data: _data}) => {
     reload();
     return;
   }
-  if (data.type !== 'update') {
-    log('message: unknown', data);
+  if (data.type === 'error') {
+    const EsmHmrErrorOverlay = customElements.get('esm-hmr-error-overlay');
+    if (EsmHmrErrorOverlay) {
+      const overlay = new EsmHmrErrorOverlay('Server Error', '[esbuild] Could not build this file', 'src/index.jsx', new Error('AH').stack);
+      document.body.appendChild(overlay);
+    }
+    log('message: error', data);
     return;
   }
-  log('message: update', data);
-  runModuleAccept(data.url)
-    .then((ok) => {
-      if (!ok) {
-        reload();
-      }
-    })
-    .catch((err) => {
-      console.error(err);
-      reload();
-    });
+  if (data.type === 'update') {
+    log('message: update', data);
+    runModuleAccept(data.url)
+      .then((ok) => {
+        if (!ok) {
+          reload();
+        }
+      })
+      .catch((err) => {
+        // const EsmHmrErrorOverlay = customElements.get('esm-hmr-error-overlay');
+        // if (EsmHmrErrorOverlay) {
+        //   const overlay = new EsmHmrErrorOverlay('Update Error', '[esbuild] Could not build this file', 'src/index.jsx', new Error('AH').stack);
+        //   document.body.appendChild(overlay);
+        // }
+        console.error('update fail', err);
+      });
+    return;
+  }
+
+  log('message: unknown', data);
 });
 log('listening for file changes...');
